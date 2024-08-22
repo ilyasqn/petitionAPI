@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
-from rest_framework import status, generics
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, generics, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +12,8 @@ from .models import Petition, Signature
 from .serializers import PetitionSerializer, SignatureSerializer
 from rest_framework.decorators import api_view
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import filters
+from .filters import PetitionFilter
 
 # Create your views here.
 
@@ -56,11 +59,13 @@ class apiPetitionCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-@api_view(['GET'])
-def apiPetitionList(request):
-    petitions = Petition.objects.all()
-    serializer = PetitionSerializer(petitions, many=True)
-    return Response(serializer.data)
+class PetitionViewSet(viewsets.ModelViewSet):
+    queryset = Petition.objects.all()
+    serializer_class = PetitionSerializer
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
+    filterset_class = PetitionFilter
+    ordering_fields = '__all__'
+    ordering = ['-pub_date']
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

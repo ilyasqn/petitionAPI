@@ -1,10 +1,15 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
 from . import views
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
+router = DefaultRouter()
+router.register('',views.PetitionViewSet)
+
 urlpatterns = [
     path('', views.apiOverview, name='api_overview'),
-    path('petitions/', views.apiPetitionList, name='api_petition_list'),
+    path('petitions/', include(router.urls)),
     path('petition/create/', views.apiPetitionCreateView.as_view(), name='api_petition_create'),
     path('petition/sign/<int:pk>/', views.apiSignPetition, name='api_sign_petition'),
     path('petition/resign/<int:pk>/', views.apiResignPetition, name='api_resign_petition'),
