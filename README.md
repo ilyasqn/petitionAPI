@@ -3,6 +3,7 @@
 1) Create, Read, Delete, Sign, Resign, count petition
 2) JWT Authentication
 3) Docker wrap
+4) Filters
 
 
 How to run the project?
