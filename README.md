@@ -6,7 +6,7 @@
 
 
 How to run the project?
-1) Clone the project: git clone https://github.com/ilyasqn/petition_api
+1) Clone the project: git clone https://github.com/ilyasqn/petitionAPI
 2) Go to directory: cd petitionAPI
 3) Type: "docker build -t petitionAPI ." 
 4) Then "docker run -p 8000:8000 petitionAPI"
