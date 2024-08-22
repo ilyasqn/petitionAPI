@@ -7,9 +7,9 @@
 
 How to run the project?
 1) Clone the project: git clone https://github.com/ilyasqn/petition_api
-2) Go to directory: cd petition_site
-3) Type: "docker build -t petition_api ." then "docker run -d -p 8000:8000 --name petition_container petition_api"
-5) Do Migrations (if its needed) "docker exec -it petition_container python manage.py migrate"
+2) Go to directory: cd petitionAPI
+3) Type: "docker build -t petitionAPI ." 
+4) Then "docker run -p 8000:8000 petitionAPI"
 6) Go http://localhost:8000/api/ (you can see all urls for check)
 7) Install Postman (easier to check with JWT tokens)
 
