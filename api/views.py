@@ -15,27 +15,29 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import filters
 from .filters import PetitionFilter
 
+
 # Create your views here.
 
 @api_view(['GET'])
-def apiOverview(request):
-	api_urls = {
-		'API Overview':'',
-		'Petition List':'/petitions/',
-		'Petition Create ':'/petition/create/',
-		'Petition Delete':'/petition/delete/<int:pk>/',
-		'Petition Resign ': '/petition/resign/<int:pk>/',
-		'Petition Sign': '/petition/sign/<int:pk>/',
-		'User Create': '/register/',
+def ApiOverview(request):
+    api_urls = {
+        'API Overview': '',
+        'Petition List': '/petitions/',
+        'Petition Create ': '/petition/create/',
+        'Petition Delete': '/petition/delete/<int:pk>/',
+        'Petition Resign ': '/petition/resign/<int:pk>/',
+        'Petition Sign': '/petition/sign/<int:pk>/',
+        'User Create': '/register/',
         'User Login': '/login/',
         'User Token Refresh': '/token/refresh/',
         'User Token Verify': '/token/verify'
-	}
+    }
 
-	return Response(api_urls)
+    return Response(api_urls)
+
 
 @api_view(['POST'])
-def apiRegister(request):
+def api_register(request):
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -50,16 +52,20 @@ def apiRegister(request):
         'access': str(refresh.access_token),
     }, status=status.HTTP_201_CREATED)
 
-class apiTokenObtainPairView(TokenObtainPairView):
+
+class ApiTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
-class apiPetitionCreateView(generics.CreateAPIView):
+
+class ApiPetitionCreateView(generics.CreateAPIView):
     queryset = Petition.objects.all()
     serializer_class = PetitionSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-class PetitionViewSet(viewsets.ModelViewSet):
+
+
+class ApiPetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.all()
     serializer_class = PetitionSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
@@ -67,9 +73,10 @@ class PetitionViewSet(viewsets.ModelViewSet):
     ordering_fields = '__all__'
     ordering = ['-pub_date']
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def apiSignPetition(request, pk):
+def sign_petition(request, pk):
     petition = get_object_or_404(Petition, pk=pk)
     vote_is_exist = Signature.objects.filter(user=request.user, petition=petition).exists()
 
@@ -79,20 +86,23 @@ def apiSignPetition(request, pk):
         return Response({'message': 'Signature added successfully'}, status=status.HTTP_201_CREATED)
     return Response({'message': 'Signature already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def apiResignPetition(request, pk):
+def resign_petition(request, pk):
     petition = get_object_or_404(Petition, pk=pk)
-    vote = Signature.objects.filter(user=request.user, petition=petition).first()
+    vote = Signature
+    vote.objects.filter(user=request.user, petition=petition)
 
     if vote:
         vote.delete()
         return Response({'message': 'Signature removed successfully'}, status=status.HTTP_204_NO_CONTENT)
     return Response({'message': 'No signature found'}, status=status.HTTP_404_NOT_FOUND)
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def apiDeletePetition(request, pk):
+def delete_petition(request, pk):
     petition = get_object_or_404(Petition, pk=pk)
 
     if petition.author == request.user:
