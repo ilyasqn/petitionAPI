@@ -56,15 +56,6 @@ def api_register(request):
 class ApiTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
-
-class ApiPetitionCreateView(generics.CreateAPIView):
-    queryset = Petition.objects.all()
-    serializer_class = PetitionSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-
 class ApiPetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.all()
     serializer_class = PetitionSerializer
@@ -72,6 +63,29 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
     filterset_class = PetitionFilter
     ordering_fields = '__all__'
     ordering = ['-pub_date']
+
+    def is_author_or_superuser(self, petition):
+        return petition.author == self.request.user or self.request.user.is_superuser
+    @permission_classes([IsAuthenticated])
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    @permission_classes([IsAuthenticated])
+    def destroy(self, request, *args, **kwargs):
+        petition = self.get_object()
+
+        if self.is_author_or_superuser(petition):
+            return super().destroy(request, *args, **kwargs)
+        return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+    @permission_classes([IsAuthenticated])
+    def partial_update(self, request, *args, **kwargs):
+        petition = self.get_object()
+
+        if self.is_author_or_superuser(petition):
+            return super().partial_update(request, *args, **kwargs)
+        return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+
+
 
 
 @api_view(['POST'])
@@ -99,13 +113,3 @@ def resign_petition(request, pk):
         return Response({'message': 'Signature removed successfully'}, status=status.HTTP_204_NO_CONTENT)
     return Response({'message': 'No signature found'}, status=status.HTTP_404_NOT_FOUND)
 
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_petition(request, pk):
-    petition = get_object_or_404(Petition, pk=pk)
-
-    if petition.author == request.user:
-        petition.delete()
-        return Response({'message': 'Petition deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
-    return Response({'message': 'You are not who create this petition'}, status=status.HTTP_403_FORBIDDEN)
