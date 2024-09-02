@@ -77,6 +77,16 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
             if self.is_author_or_superuser(petition):
                 return super().destroy(request, *args, **kwargs)
             return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+
+    def update(self, request, *args, **kwargs):
+        if not self.request.user.is_authenticated:
+            return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            petition = self.get_object()
+            if self.is_author_or_superuser(petition):
+                return super().update(request, *args, **kwargs)
+            return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+
     def partial_update(self, request, *args, **kwargs):
         if not self.request.user.is_authenticated:
             return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
