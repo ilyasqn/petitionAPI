@@ -66,24 +66,25 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
 
     def is_author_or_superuser(self, petition):
         return petition.author == self.request.user or self.request.user.is_superuser
-    @permission_classes([IsAuthenticated])
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @permission_classes([IsAuthenticated])
     def destroy(self, request, *args, **kwargs):
-        petition = self.get_object()
-
-        if self.is_author_or_superuser(petition):
-            return super().destroy(request, *args, **kwargs)
-        return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
-    @permission_classes([IsAuthenticated])
+        if not self.request.user.is_authenticated:
+            return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            petition = self.get_object()
+            if self.is_author_or_superuser(petition):
+                return super().destroy(request, *args, **kwargs)
+            return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
     def partial_update(self, request, *args, **kwargs):
-        petition = self.get_object()
-
-        if self.is_author_or_superuser(petition):
-            return super().partial_update(request, *args, **kwargs)
-        return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+        if not self.request.user.is_authenticated:
+            return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            petition = self.get_object()
+            if self.is_author_or_superuser(petition):
+                return super().partial_update(request, *args, **kwargs)
+            return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
 
 
 
