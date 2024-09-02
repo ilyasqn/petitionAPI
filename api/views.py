@@ -64,33 +64,33 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
     filter_class = PetitionFilter
     ordering_fields = '__all__'
     ordering = ['-pub_date']
-
-    def is_author_or_superuser(self, petition):
-        return petition.author == self.request.user or self.request.user.is_superuser
+    permission_classes = [IsAuthenticated]
 
     def check_author_and_perform_action(self, request, petition, action, *args, **kwargs):
-        if not self.request.user.is_authenticated:
-            return Response({'message': 'You are not authorized'}, status=status.HTTP_401_UNAUTHORIZED)
         if petition.author == self.request.user or self.request.user.is_superuser:
             return action(request, *args, **kwargs)
         return Response({'message': 'You are not who create this petition or admin'}, status=status.HTTP_403_FORBIDDEN)
 
-    def perform_create(self, serializer):
-        if not self.request.user.is_authenticated:
-            return Response({'message': 'You must authorized to create petition'}, status=status.HTTP_401_UNAUTHORIZED)
-        serializer.save(author=self.request.user)
+    def create(self, request, *args, **kwargs):
+        title = request.data.get('title')
 
+        if Petition.objects.filter(title=title).exists():
+            return Response({'message': 'Petition already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return super().create(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
     def destroy(self, request, *args, **kwargs):
         petition = self.get_object()
-        self.check_author_and_perform_action(request, petition, super().destroy, *args, **kwargs)
+        return self.check_author_and_perform_action(request, petition, super().destroy, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         petition = self.get_object()
-        self.check_author_and_perform_action(request, petition, super().update, *args, **kwargs)
+        return self.check_author_and_perform_action(request, petition, super().update, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         petition = self.get_object()
-        self.check_author_and_perform_action(request, petition, super().partial_update, *args, **kwargs)
+        return self.check_author_and_perform_action(request, petition, super().partial_update, *args, **kwargs)
 
 
 @api_view(['POST'])
