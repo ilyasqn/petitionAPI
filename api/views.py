@@ -1,15 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, generics, viewsets
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import permission_classes
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Petition, Signature
-from .serializers import PetitionSerializer, SignatureSerializer
+from .serializers import PetitionSerializer
 from rest_framework.decorators import api_view
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import filters
@@ -19,7 +19,7 @@ from .filters import PetitionFilter
 # Create your views here.
 
 @api_view(['GET'])
-def ApiOverview(request):
+def api_overview(request):
     api_urls = {
         'API Overview': '',
         'Petition List': '/petitions/',
@@ -56,47 +56,41 @@ def api_register(request):
 class ApiTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
+
 class ApiPetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.all()
     serializer_class = PetitionSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
-    filterset_class = PetitionFilter
+    filter_class = PetitionFilter
     ordering_fields = '__all__'
     ordering = ['-pub_date']
 
     def is_author_or_superuser(self, petition):
         return petition.author == self.request.user or self.request.user.is_superuser
+
+    def check_author_and_perform_action(self, request, petition, action, *args, **kwargs):
+        if not self.request.user.is_authenticated:
+            return Response({'message': 'You are not authorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        if petition.author == self.request.user or self.request.user.is_superuser:
+            return action(request, *args, **kwargs)
+        return Response({'message': 'You are not who create this petition or admin'}, status=status.HTTP_403_FORBIDDEN)
+
     def perform_create(self, serializer):
+        if not self.request.user.is_authenticated:
+            return Response({'message': 'You must authorized to create petition'}, status=status.HTTP_401_UNAUTHORIZED)
         serializer.save(author=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
-        if not self.request.user.is_authenticated:
-            return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            petition = self.get_object()
-            if self.is_author_or_superuser(petition):
-                return super().destroy(request, *args, **kwargs)
-            return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+        petition = self.get_object()
+        self.check_author_and_perform_action(request, petition, super().destroy, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if not self.request.user.is_authenticated:
-            return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            petition = self.get_object()
-            if self.is_author_or_superuser(petition):
-                return super().update(request, *args, **kwargs)
-            return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
+        petition = self.get_object()
+        self.check_author_and_perform_action(request, petition, super().update, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
-        if not self.request.user.is_authenticated:
-            return Response({'message': 'You are not authorized to perform this action'},status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            petition = self.get_object()
-            if self.is_author_or_superuser(petition):
-                return super().partial_update(request, *args, **kwargs)
-            return Response({'message': 'You are not who create this petition or an admin'}, status=status.HTTP_403_FORBIDDEN)
-
-
+        petition = self.get_object()
+        self.check_author_and_perform_action(request, petition, super().partial_update, *args, **kwargs)
 
 
 @api_view(['POST'])
@@ -123,4 +117,3 @@ def resign_petition(request, pk):
         vote.delete()
         return Response({'message': 'Signature removed successfully'}, status=status.HTTP_204_NO_CONTENT)
     return Response({'message': 'No signature found'}, status=status.HTTP_404_NOT_FOUND)
-
