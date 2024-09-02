@@ -5,10 +5,10 @@ from . import views
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 router = SimpleRouter()
-router.register(r'petition',views.ApiPetitionViewSet)
+router.register(r'petition', views.ApiPetitionViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', include(router.urls), name='petition'),
     path('/<int:pk>/', include(router.urls)),
 
 

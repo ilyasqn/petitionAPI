@@ -129,8 +129,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-LOGIN_REDIRECT_URL = 'petition_list'
-LOGOUT_REDIRECT_URL = 'petition_list'
+LOGIN_REDIRECT_URL = '/api/petition/'
+LOGOUT_REDIRECT_URL = '/api/petition/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
