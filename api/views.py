@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -65,6 +65,11 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
     ordering_fields = '__all__'
     ordering = ['-pub_date']
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def check_author_and_perform_action(self, request, petition, action, *args, **kwargs):
         if petition.author == self.request.user or self.request.user.is_superuser:
