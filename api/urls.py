@@ -10,8 +10,8 @@ router.register(r'petition', views.ApiPetitionViewSet)
 urlpatterns = [
     path('', include(router.urls), name='petition'),
     path('/<int:pk>/', include(router.urls), name='petition-detail'),
-    # path('/<int:pk>/sign/', include(router.urls), name='petition-sign'),
-    # path('/<int:pk>/resign/', include(router.urls), name='petition-resign'),
+    path('/<int:pk>/sign/', include(router.urls), name='petition-sign'),
+    path('/<int:pk>/resign/', include(router.urls), name='petition-resign'),
 
 
     path('register/', views.api_register, name='register'),

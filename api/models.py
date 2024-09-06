@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
+
 class Petition(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -11,6 +12,7 @@ class Petition(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class Signature(models.Model):
     petition = models.ForeignKey(Petition, on_delete=models.CASCADE)
