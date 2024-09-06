@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,11 +11,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Petition, Signature
 from .serializers import PetitionSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import filters
 from .filters import PetitionFilter
-from .permissions import IsAuthenticatedOrReadOnly
 
 
 # Create your views here.
@@ -72,6 +72,9 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
             return action(request, *args, **kwargs)
         return Response({'message': 'You are not who create this petition or admin'}, status=status.HTTP_403_FORBIDDEN)
 
+    def check_vote_is_exist(self, request, petition):
+        return Signature.objects.filter(user=request.user, petition=petition).exists()
+
     def create(self, request, *args, **kwargs):
         title = request.data.get('title')
 
@@ -79,8 +82,10 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Petition already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
         return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
     def destroy(self, request, *args, **kwargs):
         petition = self.get_object()
         return self.check_author_and_perform_action(request, petition, super().destroy, *args, **kwargs)
@@ -93,28 +98,44 @@ class ApiPetitionViewSet(viewsets.ModelViewSet):
         petition = self.get_object()
         return self.check_author_and_perform_action(request, petition, super().partial_update, *args, **kwargs)
 
+    @action(detail=True, methods=['post'])
+    def sign(self, request, *args, **kwargs):
+        petition = self.get_object()
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def sign_petition(request, pk):
-    petition = get_object_or_404(Petition, pk=pk)
-    vote_is_exist = Signature.objects.filter(user=request.user, petition=petition).exists()
-
-    if not vote_is_exist:
-        signature = Signature(petition=petition, user=request.user)
-        signature.save()
+        if self.check_vote_is_exist(request, petition):
+            return Response({'message': 'Signature already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        Signature.objects.create(user=request.user, petition=petition)
         return Response({'message': 'Signature added successfully'}, status=status.HTTP_201_CREATED)
-    return Response({'message': 'Signature already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'])
+    def resign(self, request, *args, **kwargs):
+        petition = self.get_object()
+
+        if self.check_vote_is_exist(request, petition):
+            return Response({'message': 'Signature resigned successfully'}, status=status.HTTP_200_OK)
+        return Response({'message': 'No signatures found'}, status=status.HTTP_404_NOT_FOUND)
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def sign_petition(request, pk):
+#     petition = get_object_or_404(Petition, pk=pk)
+#     vote_is_exist = Signature.objects.filter(user=request.user, petition=petition).exists()
+#
+#     if not vote_is_exist:
+#         signature = Signature(petition=petition, user=request.user)
+#         signature.save()
+#         return Response({'message': 'Signature added successfully'}, status=status.HTTP_201_CREATED)
+#     return Response({'message': 'Signature already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def resign_petition(request, pk):
-    petition = get_object_or_404(Petition, pk=pk)
-    vote = Signature
-    vote.objects.filter(user=request.user, petition=petition)
-
-    if vote:
-        vote.delete()
-        return Response({'message': 'Signature removed successfully'}, status=status.HTTP_204_NO_CONTENT)
-    return Response({'message': 'No signature found'}, status=status.HTTP_404_NOT_FOUND)
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def resign_petition(request, pk):
+#     petition = get_object_or_404(Petition, pk=pk)
+#     vote = Signature
+#     vote.objects.filter(user=request.user, petition=petition)
+#
+#     if vote:
+#         vote.delete()
+#         return Response({'message': 'Signature removed successfully'}, status=status.HTTP_204_NO_CONTENT)
+#     return Response({'message': 'No signature found'}, status=status.HTTP_404_NOT_FOUND)
