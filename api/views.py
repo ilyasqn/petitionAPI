@@ -15,8 +15,9 @@ from .filters import PetitionFilter
 
 
 # Create your views here.
+
 @api_view(['POST'])
-def api_register(request):
+def user_signup(request):
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -30,7 +31,6 @@ def api_register(request):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }, status=status.HTTP_201_CREATED)
-
 
 class ApiTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
