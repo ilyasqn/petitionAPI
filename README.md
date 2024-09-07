@@ -1,24 +1,55 @@
 # Petition API
 
-1) Create, Read, Delete, Sign, Resign, count petition
-2) JWT Authentication
-3) Docker wrap
-4) Filters
+A simple API for creating, reading, signing, and resigning petitions, secured with JWT authentication and containerized with Docker. Includes filter functionality for easier query management.
 
+## Features:
+1. **CRUD Operations**: Create, Read, Update, Delete petitions
+2. **Petition Signing**: Sign and Resign petitions
+3. **JWT Authentication**: Secured endpoints requiring JWT tokens
+4. **Docker**: Easily run the project in a containerized environment
+5. **Filters**: Query petitions using filters
 
-How to run the project?
-1) Clone the project: git clone https://github.com/ilyasqn/petitionAPI
-2) Go to directory: cd petitionAPI
-3) Type: "docker build -t petition_api ." 
-4) Then "docker run -p 8000:8000 petition_api"
-6) Go http://localhost:8000/api/ (you can see all urls for check)
-7) Install Postman (easier to check with JWT tokens)
+## How to Run the Project?
 
-How to check API?
-1) List and Details of Petitions  http://localhost:8000/api/petitions/ (GET)
-2) Create User  http://localhost:8000/api/register/ (fill in "Body" "x-www-form-urlencoded" Key: username, password) and Get access token (POST)
-3) Go "Headers" type in Key: "Authorization" and in Value: "Bearer your access token"
-4) Create a Petition   http://localhost:8000/api/petition/create/ (fill title, description in Body) (POST)
-5) Sign a Petition http://localhost:8000/api/petition/sign/<int:pk>/ (POST)
-6) Resign a Petition  http://localhost:8000/api/petition/resign/<int:pk>/ (DELETE)
-7) Delete a Petition  http://localhost:8000/api/petition/delete/<int:pk>/ (DELETE)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ilyasqn/petitionAPI
+2. Navigate to the project directory:
+   ```bash
+   cd petitionAPI
+3. Build the Docker image:
+   ```bash
+   docker build -t petition_api .
+4. Run the Docker container:
+   ```bash
+   docker run -p 8000:8000 petition_api
+5. Open your browser and go to http://localhost:8000/api/.
+6. (Optional) Install Postman to easily interact with the API and handle JWT tokens.
+
+How to Check the API?
+1. Create & Read Petitions
+URL: http://localhost:8000/api/petitions/
+Method: POST (to create) / GET (to read all)
+2. User Registration & JWT Token Retrieval
+URL: http://localhost:8000/api/signup/
+Method: POST
+Body (x-www-form-urlencoded):
+Key: username
+Key: password
+After signing up, you will receive a JWT token.
+3. Authorize Requests
+In Postman, go to the Headers section and add the following:
+Key: Authorization,
+Value: Bearer "your access token"
+4. Update & Delete Petitions
+URL: http://localhost:8000/api/petitions/int:pk/
+Methods: PUT (update) / PATCH (partial update) / DELETE (delete)
+Body (for updating):
+title (string)
+description (string)
+5. Sign a Petition
+URL: http://localhost:8000/api/petitions/int:pk/sign/
+Method: POST
+6. Resign (Remove Signature) from a Petition
+URL: http://localhost:8000/api/petitions/int:pk/resign/
+Method: DELETE
