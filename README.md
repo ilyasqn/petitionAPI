@@ -17,15 +17,11 @@ A simple API for creating, reading, signing, and resigning petitions, secured wi
 2. Navigate to the project directory:
    ```bash
    cd petitionAPI
-3. Build the Docker image:
+3. Build and run the Docker image:
    ```bash
-   docker build -t petition_api .
-4. Run the Docker container:
-   ```bash
-   docker run -p 8000:8000 petition_api
-5. Open your browser and go to http://localhost:8000/api/.
-6. (Optional) Install Postman to easily interact with the API and handle JWT tokens.
-
+   docker-compose up --build
+4. Open your browser and go to http://localhost:8000/api/.
+5. (Optional) Install Postman to easily interact with the API and handle JWT tokens.
 How to Check the API?
 1. Create & Read Petitions
 URL: http://localhost:8000/api/petitions/
